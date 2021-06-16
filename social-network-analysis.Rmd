@@ -1,0 +1,201 @@
+---
+title: "HUDK4051: Social Network Analysis"
+author: "Xingyi Xie"
+date: "4/2021"
+output: html_document
+---
+
+In this assignment you will be generating and analyzing three social networks (also known as graphs or sociograms) based on three different measures. You will be using data from:
+
+Representing Classroom Social Structure. Melbourne: Victoria Institute of
+Secondary Education, M. Vickers and S. Chan, (1981)
+
+Available from the Index of Complex Networks ([ICON](https://icon.colorado.edu/#!/))
+
+The data were collected by Vickers & Chan from 29 seventh grade students in a school in Victoria, Australia. Students were asked to nominate their classmates on a number of relations including the following three "layers":  
+
+1. Who do you get on with in the class?  
+2. Who are your best friends in the class?  
+3. Who would you prefer to work with?  
+
+You have a data set for each of these questions, please complete the following tasks.
+
+## Data Wrangling
+
+Manipulate each of the data sets so that it is suitable for building a social network using iGraph.
+
+*If you have not previously taken HUDK4050 please sign up for office hours before you attempt this project*
+
+```{r}
+library(igraph)
+library(stats)
+library(base)
+best.friends<-read.csv("best.friends.csv")
+work.with<-read.csv("work.with.csv")
+get.on.with<-read.csv("get.on.with.csv")
+g1 <- graph_from_data_frame(best.friends[,c(2,3,4)], directed=TRUE)
+g2 <- graph_from_data_frame(work.with[,c(2,3,4)], directed=TRUE)
+g3 <- graph_from_data_frame(get.on.with[,c(2,3,4)], directed=TRUE)
+```
+
+## Visualize the Networks
+
+Create a graph for each of the data sets, are the graphs directed or undirected? Visualize each of the graphs you have created and color the nodes according to gender. Save pdfs of your graphs in this directory for upload to Github.
+
+```{r}
+color1=list()
+for(i in 1:length(unique(best.friends$from)))
+{
+if(best.friends[best.friends$from%in%i,]$gender.from[1]=='female')
+{
+color1[i]='red'
+}
+else
+{
+color1[i]='blue'
+}
+}
+color2=list()
+for(i in 1:length(unique(work.with$from)))
+{
+if(work.with[work.with$from%in%i,]$gender.from[1]=='female')
+{
+color2[i]='red'
+}
+else
+{
+color2[i]='blue'
+}
+}
+color3=list()
+for(i in 1:length(unique(get.on.with$from)))
+{
+if(get.on.with[get.on.with$from%in%i,]$gender.from[1]=='female')
+{
+color3[i]='red'
+}
+else
+{
+color3[i]='blue'
+}
+}
+plot(g1, vertex.color = unlist(color1))
+plot(g2, vertex.color = unlist(color2))
+plot(g3, vertex.color = unlist(color3))
+```
+
+## Centrality Measures
+
+Who in the class has the highest degree centrality for each measure?
+##g1:It is known that student 8: centrality 1.0714286 is the highest g2:It is known that student 11: centrality 0.8928 is the highest g3:It is known that student 11: centrality 1.5 is the highest.
+```{r}
+degree(g1,normalized = T)
+degree(g2,normalized = T)
+degree(g3,normalized = T)
+```
+
+Does **degree centrality** mean the same thing for each of your networks? Does it make sense for each of your networks?
+##The results of the g3 network are different from those of the g1 and g2 networks.It is obvious from the results of dregree centrality in network graphs 1, 2 that classmates 8 and 11 have the highest scores, which proves that both 8 and 11 may have high cohesiveness, prestige and sociability.
+Who in the class has the highest closeness centrality?
+##g1:The highest intermediate centrality is student 28:0.2905088747 g2:The highest intermediate centrality is student 11:0.12 ,g3:The highest intermediate centrality is student 11:0.098.
+```{r}
+betweenness(g1,normalized = T)
+betweenness(g2,normalized = T)
+betweenness(g3,normalized = T)
+```
+
+How does **betweeness centrality** differ from degree centrality? Is one more useful than the other? Does their utility differ between your three networks?
+##degree centrality:We just look at the nodes in the network at the point of change, how many nodes are connected through him, emphasize the individual.
+##betweeness centrality:Represents whether the shortest distances all pass through the point, and if they all pass through it means the point is important. It also emphasizes the value of the point and the network, and is more indicative of forwarding and intermediation.
+
+## Simple structures
+
+Count the number of dyads and the number and type of triads using the following commands.
+```{r}
+dyad_census(g1)
+dyad_census(g2)
+dyad_census(g3)
+```
+[Documentation](http://igraph.org/r/doc/dyad_census.html)
+
+```{r}
+triad_census(g1)
+triad_census(g2)
+triad_census(g3)
+```
+[Documentation](http://igraph.org/r/doc/triad_census.html)
+
+Do these metrics tell you anything about the networks? If so what?
+##g3 mut is the largest, followed by g1, g3 asym is the largest, followed by g2, g1 null is the largest, followed by g2
+##It means that the number of interconnections between g3 is the largest and the relative network is more centralized, and null in g1 is the largest indicating that the network is more decentralized
+
+## Cliques
+
+Answer the following questions using the [clique functions](http://igraph.org/r/doc/cliques.html)
+
+What is the size of the largest clique(s) in each of the three networks?
+
+```{r}
+library(igraph)
+clique_num(g1)
+clique_num(g2)
+clique_num(g3)
+```
+
+Which nodes/vertices are in the largest cliques for the three networks? Is there much overlap?
+
+```{r}
+cliques(g1, min=7)
+largest_cliques(g1)
+cliques(g2, min=9)
+largest_cliques(g2)
+cliques(g3, min=12)
+largest_cliques(g3)
+```
+##largest cliques for the three networks， As shown above, you can see that there is still a lot of overlap
+
+How many **maximal cliques** are there in each of the networks?
+##maximal cliques g1:35,g2:36 g3:64
+```{r}
+max_cliques(g1)
+max_cliques(g2)
+max_cliques(g3)
+```
+
+## Components & Cutpoints
+
+Find the cutpoints (articulation points) for each of the three networks you generated. What does this tell you about the graphs? Does what you find match a visual exploration of the networks?
+```{r}
+articulation_points(g1)
+articulation_points(g2)
+articulation_points(g3)
+```
+##The cutpoint, student 13, basically serves the purpose of connecting the two outlier students, 25 and 18, in the first two charts. It does not match too well with the observed degree centrality nodes and intermediate centrality. So I don't think it's that indicative overall.
+
+## Putting it all together
+
+Write a narrative description of the social ties among members of this 7th grade class using the network, centrality and structural metrics you have developed. Can you provide any recommendations to the teacher of this class based on your analysis? What other information would you want to know? Can you remeber being in seventh grade, does this refelct your experience?
+
+
+##The distribution of these two network graphs about best-friend and work-with is very similar. There is a very clear dividing line between boys and girls. Only some of the boys and girls are very close to the other gender group, such as students 12 and 8, and some students 25 and 18 are clearly out of the group. But in get-on-with this network diagram, students are more related to each other and closer together. The overall conclusion is that classmates 8, 11, and 28 are the central figures in the class and may be more leadership and prestigious, or socially inclined and cohesive. All of these phenomena are very similar to my 7th grade year. I would recommend that teachers pay more attention to students 18 and 25, who are relatively on the social fringe. Likewise, excessive clique-grouping should be stopped.I had such classmates in my class at that time, who may have been born introverted or were naturally withdrawn due to family factors, and who may have been bullied by their classmates. I think teachers should talk to them more often to understand their psychological situation, because the social experience in childhood has a crucial impact on future character building. Also I would like to learn more about the relationship and impact of the interpersonal network map and student achievement.
+
+
+## Test out your skills
+
+Find another data set that interests you on the ([ICON](https://icon.colorado.edu/#!/)) website. Load the data into igraph, visualize the graph and use one of the metrics you have learned to characterize structures within the graph.
+
+```{r}
+
+stormofswords <- read.csv("stormofswords.csv")
+library(sqldf)
+library(igraph)
+library(stats)
+library(base)
+new_df<-sqldf("select Source as `from`,Target as `to`,Weight from stormofswords where `from` in ('Tyrion','Jon','Robb')")
+jpeg(filename='~/dolphins_commu11.jpg',width=1600,height=1600,units='px')
+layout=layout.sphere
+g4 <- graph_from_data_frame(new_df)
+plot(g4,layout=layout,vertex.label.cex=3,vertex.size=new_df$Weight, vertex.color=new_df$Weight)
+
+```
+
